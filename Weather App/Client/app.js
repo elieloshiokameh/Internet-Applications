@@ -11,7 +11,9 @@ new Vue({
     hourlyForecast: [],
     showPollutionChart: false,
     pollutionChart: null,
-    hourlyChart: null // Added for hourly forecast chart
+    hourlyChart: null, // Added for hourly forecast chart
+    citySuggestions: [],  // To store city suggestions
+    debounceTimeout: null
   },
   methods: {
     async getWeather() {
@@ -39,6 +41,38 @@ new Vue({
         console.error(error);
       }
     },
+    async fetchCitySuggestions() {
+      if (!this.city) {
+        this.citySuggestions = [];
+        return;
+      }
+
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(async () => {
+        const apiKey = '113e7529a5fc767ca4778b3fc0c0a05d';
+        const url = `https://api.openweathermap.org/geo/1.0/direct?q=${this.city}&limit=5&appid=${apiKey}`;
+
+        try {
+          const response = await fetch(url);
+          const suggestions = await response.json();
+          this.citySuggestions = suggestions.map(city => ({
+            name: `${city.name}, ${city.country}`,
+            lat: city.lat,
+            lon: city.lon
+          }));
+        } catch (error) {
+          console.error('Error fetching city suggestions:', error);
+        }
+      }, 300);  // Debounce input by 300ms
+    },
+    selectCity(cityName) {
+      this.city = cityName;
+      this.citySuggestions = [];
+      this.getWeather();  // Automatically fetch the weather for the selected city
+    },
+    closeModal() {
+      this.showModal = false;
+    },
 
     // Method to update the pollution chart
     updatePollutionChart(pollutionData) {
@@ -54,11 +88,11 @@ new Vue({
           datasets: [{
             label: 'Pollutant Levels',
             data: [
-              pollutionData.pm2_5, 
-              pollutionData.pm10, 
-              pollutionData.o3, 
-              pollutionData.no2, 
-              pollutionData.so2, 
+              pollutionData.pm2_5,
+              pollutionData.pm10,
+              pollutionData.o3,
+              pollutionData.no2,
+              pollutionData.so2,
               pollutionData.co
             ],
             backgroundColor: [
@@ -91,69 +125,51 @@ new Vue({
     },
 
     // Method to show the hourly forecast for the selected day
-    showHourlyForecast(day) {
-      this.selectedDay = day;
+    async openModal(day) {
       this.showModal = true;
+      this.selectedDay = day;
 
-      // Filter the hourly forecast for the selected day
-      const selectedDate = new Date(day.dt * 1000).toDateString();
-      this.hourlyForecast = this.forecast.filter(item => {
-        const itemDate = new Date(item.dt * 1000).toDateString();
-        return itemDate === selectedDate;
-      });
+      // Fetch hourly forecast for the selected day
+      try {
+        const response = await fetch(`/hourly-forecast?city=${this.city}&date=${day.date}`);
+        const data = await response.json();
+        this.hourlyForecast = data.hourlyForecast;
 
-      this.$nextTick(() => {
-        this.updateHourlyChart(this.hourlyForecast);
-      });
-    },
-
-    // Method to update the hourly forecast chart
-    updateHourlyChart(hourlyForecast) {
-      const ctx = document.getElementById('hourlyRainChart').getContext('2d');
-      if (this.hourlyChart) {
-        this.hourlyChart.destroy();
+        // Now display the chart
+        this.displayHourlyChart(this.hourlyForecast);
+      } catch (error) {
+        this.errorMessage = 'Error fetching hourly forecast data.';
       }
-
-      this.hourlyChart = new Chart(ctx, {
+    },
+    closeModal() {
+      this.showModal = false;
+    },
+    displayHourlyChart(hourlyData) {
+      const ctx = document.getElementById('hourlyForecastChart').getContext('2d');
+      new Chart(ctx, {
         type: 'line',
         data: {
-          labels: hourlyForecast.map(item => new Date(item.dt * 1000).getHours() + ":00"),
+          labels: hourlyData.map(hour => new Date(hour.dt * 1000).toLocaleTimeString()),
           datasets: [{
-            label: 'Rain (mm)',
-            data: hourlyForecast.map(item => item.rain || 0),
-            borderColor: 'rgba(54, 162, 235, 1)',
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            fill: true,
-            tension: 0.4
-          }, {
             label: 'Temperature (°C)',
-            data: hourlyForecast.map(item => item.main.temp),
-            borderColor: 'rgba(255, 99, 132, 1)',
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            fill: true,
-            tension: 0.4
-          }, {
-            label: 'Wind Speed (m/s)',
-            data: hourlyForecast.map(item => item.wind.speed),
+            data: hourlyData.map(hour => hour.main.temp),
             borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            fill: true,
-            tension: 0.4
+            fill: false,
           }]
         },
         options: {
+          responsive: true,
           scales: {
-            y: {
-              beginAtZero: true
-            }
+            xAxes: [{
+              type: 'time',
+              time: {
+                unit: 'hour',
+                tooltipFormat: 'HH:mm',
+              }
+            }]
           }
         }
       });
-    },
-
-    closeModal() {
-      this.showModal = false;
-      this.hourlyForecast = [];
     }
   }
 });

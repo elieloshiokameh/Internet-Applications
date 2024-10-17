@@ -14,7 +14,21 @@
     <div id="app">
         <h1>Weather App</h1>
         <div class="getInput">
-            <input type="text" v-model="city" placeholder="Enter city name" @keyup.enter="getWeather"/>
+            <input 
+                type="text" 
+                v-model="city" 
+                placeholder="Enter city name" 
+                @input="fetchCitySuggestions" 
+                @keyup.enter="getWeather"
+            />
+
+            <!-- City Suggestions Dropdown -->
+            <ul v-if="citySuggestions.length" class="city-suggestions">
+                <li v-for="suggestion in citySuggestions" :key="suggestion.name" @click="selectCity(suggestion.name)">
+                    {{ suggestion.name }}
+                </li>
+            </ul>
+
             <button @click="getWeather">Get Forecast</button>
         </div>
 
@@ -61,8 +75,7 @@
                 <span class="close" @click="closeModal">&times;</span>
                 <h3>Hourly Forecast for {{ selectedDay.date }}</h3>
                 <canvas id="hourlyRainChart"></canvas>
-
-                <!-- Hourly Forecast Table -->
+        
                 <table class="hourly-forecast-table">
                     <thead>
                         <tr>
@@ -85,6 +98,7 @@
                 </table>
             </div>
         </div>
+        
     </div>
 
     <script src="app.js"></script>
