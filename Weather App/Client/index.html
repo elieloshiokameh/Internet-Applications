@@ -22,6 +22,7 @@
         </div>
         <div id="response" v-if="forecast.length">
             <h2>5-Day Weather Forecast for {{ city.toUpperCase() }}</h2>
+            <p> {{ packingAdvice }}</p>
             <div id="response1">
                 <table>
                     <thead>
@@ -34,16 +35,15 @@
                     </thead>
                     <tbody>
                         <tr v-for="day in forecast" :key="day.date">
-                            <td>{{ day.date }}</td>
-                            <td>{{ day.tempMin }} - {{ day.tempMax }}</td>
-                            <td>{{ day.windSpeed }}</td>
-                            <td>{{ day.rain }}</td>
-                          </tr>
+                            <td>{{ day?.date}}</td>
+                            <td>{{ day?.temp_min }} - {{ day?.temp_max }}</td>
+                            <td>{{ day?.wind_speed }}</td>
+                            <td>{{ day?.rain }}</td>
+                        </tr>
                     </tbody>
                 </table>
                 <canvas id="pollutionChart"></canvas>
             </div>
-
         </div>
     </div>
     <script src="app.js"></script>

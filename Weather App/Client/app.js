@@ -12,13 +12,13 @@ new Vue({
       try {
         const response = await fetch(`http://localhost:3000/weather?city=${encodeURIComponent(this.city)}`);
         const data = await response.json();
-    
+
         if (response.status === 200) {
           // Process daily forecast data with temperature ranges
           this.forecast = data.forecast;
           this.packingAdvice = data.packingAdvice;
           this.pollutionData = data.pollutionData;
-    
+
           this.$nextTick(() => {
             this.updatePollutionChart(data.pollutionData);
           });
@@ -30,10 +30,13 @@ new Vue({
         console.error(error);
       }
     },
-    
+
     updatePollutionChart(pollutionData) {
       const ctx = document.getElementById('pollutionChart').getContext('2d');
-      new Chart(ctx, {
+      if (this.Chart) {
+        this.Chart.destroy();
+      }
+      this.Chart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['CO', 'NO', 'NO2', 'O3', 'SO2', 'PM2.5', 'PM10', 'NH3'],
