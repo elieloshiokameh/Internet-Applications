@@ -75,28 +75,34 @@ const generatePackingAdvice = (forecast) => {
 
   return packingAdvice;
 };
-app.get('/hourly-forecast', async (req, res) => {
+app.get('/hourly', async (req, res) => {
   const city = req.query.city;
   const date = req.query.date;
 
   try {
-      // Fetch full forecast data for the city
-      const weatherData = await fetchWeatherData(city);
-      const forecastData = weatherData.list;
+    const weatherData = await fetchWeatherData(city);
+    const forecastData = weatherData.list;
 
-      // Filter out the hourly forecast for the selected day
-      const selectedDayForecast = forecastData.filter(item => {
-          const itemDate = new Date(item.dt * 1000).toDateString();
-          return itemDate === new Date(date).toDateString();
-      });
+    // Filter hourly data for the selected day
+    const hourlyForecast = forecastData.filter(entry => {
+      const entryDate = new Date(entry.dt * 1000).toDateString();
+      return entryDate === date;
+    }).map(entry => ({
+      time: new Date(entry.dt * 1000).toLocaleTimeString(),
+      temp: entry.main.temp,
+      wind_speed: entry.wind.speed,
+      rain: entry.rain ? entry.rain['3h'] || 0 : 0,
+      description: entry.weather[0].description
+    }));
 
-      // Send filtered hourly forecast
-      res.json({ hourlyForecast: selectedDayForecast });
+    console.log(hourlyForecast)
+    res.json({ hourlyForecast });
   } catch (error) {
-      console.error('Error fetching hourly forecast:', error);
-      res.status(500).json({ message: 'Error fetching hourly forecast data.' });
+    console.error('Error handling request:', error.message);
+    res.status(500).json({ message: 'Internal server error. Please try again later.' });
   }
 });
+
 
 app.get('/weather', async (req, res) => {
   const city = req.query.city;

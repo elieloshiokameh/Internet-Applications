@@ -14,13 +14,8 @@
     <div id="app">
         <h1>Weather App</h1>
         <div class="getInput">
-            <input 
-                type="text" 
-                v-model="city" 
-                placeholder="Enter city name" 
-                @input="fetchCitySuggestions" 
-                @keyup.enter="getWeather"
-            />
+            <input type="text" v-model="city" placeholder="Enter city name" @input="fetchCitySuggestions"
+                @keyup.enter="getWeather" />
 
             <!-- City Suggestions Dropdown -->
             <ul v-if="citySuggestions.length" class="city-suggestions">
@@ -43,6 +38,7 @@
             <p>{{ packingAdvice }}</p>
             <div id="response1" class="response1">
                 <table>
+
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -75,7 +71,8 @@
                 <span class="close" @click="closeModal">&times;</span>
                 <h3>Hourly Forecast for {{ selectedDay.date }}</h3>
                 <canvas id="hourlyRainChart"></canvas>
-        
+
+                <!-- Hourly Forecast Table -->
                 <table class="hourly-forecast-table">
                     <thead>
                         <tr>
@@ -92,13 +89,14 @@
                             <td>{{ hour.temp }}</td>
                             <td>{{ hour.wind_speed }}</td>
                             <td>{{ hour.rain || 0 }}</td>
-                            <td>{{ hour.weather[0].description }}</td>
+                            <td>{{ hour.description }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-        
+
+
     </div>
 
     <script src="app.js"></script>

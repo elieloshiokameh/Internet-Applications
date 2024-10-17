@@ -33,8 +33,7 @@ table {
   color: black;
   border-collapse: collapse;
   width: 45%;
-  margin-right: 80px;
-  margin-left: 50px;
+  margin-right: 50px;
   height: 90%;
   color: #000;;
 }
@@ -55,9 +54,10 @@ canvas {
 #response1 {
   height: 500px;
   margin: 40px;
+  padding-left: 90px;
   display: flex;
-  justify-content: center space-between space-around;
-  align-items: center;
+  justify-content: space-between space-around;
+  align-items: flex-end;
   max-width: 90vw;
 }
 
@@ -72,7 +72,7 @@ canvas {
   top: 0;
   width: 100%;
   height: 100%;
-  overflow: auto;
+  overflow-x: hidden;
   background-color: rgba(0, 0, 0, 0.4); /* Dark background overlay */
 }
 
@@ -84,7 +84,7 @@ canvas {
   width: 80%;
   max-width: 600px;
   color: black;
-  overflow-y: auto;
+  overflow-x: hidden;
   max-height: 80vh; /* Restrict height to fit viewport */
 }
 
@@ -108,7 +108,6 @@ canvas {
 }
 
 .hourly-forecast-table th, .hourly-forecast-table td {
-  padding: 12px;
   border: 1px solid #ddd;
   text-align: center;
 }
@@ -125,6 +124,12 @@ canvas {
 .hourly-forecast-table tr:hover {
   background-color: #f1f1f1;
 }
+
+canvas {
+  width: 100% !important;
+  height: 400px !important;
+}
+
 
 .city-suggestions {
   border: 1px solid #ccc;
@@ -146,6 +151,7 @@ canvas {
 .city-suggestions li {
   padding: 10px;
   cursor: pointer;
+  width: 200px;
 }
 
 .city-suggestions li:hover {

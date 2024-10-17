@@ -125,51 +125,74 @@ new Vue({
     },
 
     // Method to show the hourly forecast for the selected day
-    async openModal(day) {
-      this.showModal = true;
+    async showHourlyForecast(day) {
       this.selectedDay = day;
+      this.showModal = true;
 
-      // Fetch hourly forecast for the selected day
-      try {
-        const response = await fetch(`/hourly-forecast?city=${this.city}&date=${day.date}`);
-        const data = await response.json();
-        this.hourlyForecast = data.hourlyForecast;
+      // Fetch the detailed hourly forecast
+      const response = await fetch(`http://localhost:3000/hourly?city=${encodeURIComponent(this.city)}&date=${encodeURIComponent(day.date)}`);
+      const data = await response.json();
+      console.log(data)
+      this.hourlyForecast = data.hourlyForecast;
 
-        // Now display the chart
-        this.displayHourlyChart(this.hourlyForecast);
-      } catch (error) {
-        this.errorMessage = 'Error fetching hourly forecast data.';
+      this.$nextTick(() => {
+        this.updateHourlyForecastChart(this.hourlyForecast);
+      });
+    },
+
+    updateHourlyForecastChart(hourlyData) {
+      const ctx = document.getElementById('hourlyRainChart').getContext('2d');
+      if (this.HourlyChart) {
+        this.HourlyChart.destroy();
       }
-    },
-    closeModal() {
-      this.showModal = false;
-    },
-    displayHourlyChart(hourlyData) {
-      const ctx = document.getElementById('hourlyForecastChart').getContext('2d');
-      new Chart(ctx, {
+
+      this.HourlyChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: hourlyData.map(hour => new Date(hour.dt * 1000).toLocaleTimeString()),
-          datasets: [{
-            label: 'Temperature (°C)',
-            data: hourlyData.map(hour => hour.main.temp),
-            borderColor: 'rgba(75, 192, 192, 1)',
-            fill: false,
-          }]
+          labels: hourlyData.map(hour => hour.time),
+          datasets: [
+            {
+              label: 'Rain (mm)',
+              data: hourlyData.map(hour => hour.rain || 0),
+              borderColor: 'rgba(54, 162, 235, 1)',
+              fill: false
+            },
+            {
+              label: 'Temperature (°C)',
+              data: hourlyData.map(hour => hour.temp),
+              borderColor: 'rgba(255, 99, 132, 1)',
+              fill: false
+            },
+            {
+              label: 'Wind Speed (m/s)',
+              data: hourlyData.map(hour => hour.wind_speed),
+              borderColor: 'rgba(75, 192, 192, 1)',
+              fill: false
+            }
+          ]
         },
         options: {
-          responsive: true,
           scales: {
-            xAxes: [{
-              type: 'time',
-              time: {
-                unit: 'hour',
-                tooltipFormat: 'HH:mm',
+            x: {
+              title: {
+                display: true,
+                text: 'Time'
               }
-            }]
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Value'
+              },
+              min: 0
+            }
           }
         }
       });
+    },
+
+    closeModal() {
+      this.showModal = false;
     }
   }
 });
