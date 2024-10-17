@@ -75,6 +75,33 @@ const generatePackingAdvice = (forecast) => {
 
   return packingAdvice;
 };
+app.get('/hourly', async (req, res) => {
+  const city = req.query.city;
+  const date = req.query.date;
+
+  try {
+    const weatherData = await fetchWeatherData(city);
+    const forecastData = weatherData.list;
+
+    // Filter hourly data for the selected day
+    const hourlyForecast = forecastData.filter(entry => {
+      const entryDate = new Date(entry.dt * 1000).toDateString();
+      return entryDate === date;
+    }).map(entry => ({
+      time: new Date(entry.dt * 1000).toLocaleTimeString(),
+      temp: entry.main.temp,
+      wind_speed: entry.wind.speed,
+      rain: entry.rain ? entry.rain['3h'] || 0 : 0,
+      description: entry.weather[0].description
+    }));
+
+    res.json({ hourlyForecast });
+  } catch (error) {
+    console.error('Error handling request:', error.message);
+    res.status(500).json({ message: 'Internal server error. Please try again later.' });
+  }
+});
+
 
 app.get('/weather', async (req, res) => {
   const city = req.query.city;
