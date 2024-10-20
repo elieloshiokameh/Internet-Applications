@@ -11,12 +11,19 @@ new Vue({
     hourlyForecast: [],
     showPollutionChart: false,
     pollutionChart: null,
-    hourlyChart: null, // Added for hourly forecast chart
-    citySuggestions: [],  // To store city suggestions
-    debounceTimeout: null
+    hourlyChart: null,
+    citySuggestions: [],
+    debounceTimeout: null,
+    pollutionWarning: ''
   },
   methods: {
     async getWeather() {
+
+      this.errorMessage = '';
+      this.pollutionWarning = '';
+      this.forecast = [];
+      this.showPollutionChart = false;
+
       try {
         const response = await fetch(`http://localhost:3000/weather?city=${encodeURIComponent(this.city)}`);
         const data = await response.json();
@@ -26,7 +33,13 @@ new Vue({
           this.packingAdvice = data.packingAdvice;
           this.pollutionData = data.pollutionData;
 
-          // Show pollution chart only if we have pollution data
+          // Check for elevated pollution levels
+          if (data.elevatedPollutants && data.elevatedPollutants.length > 0) {
+            this.pollutionWarning = `Warning: Elevated levels of ${data.elevatedPollutants.join(', ')} detected.`;
+          } else {
+            this.pollutionWarning = '';  // No elevated pollution levels
+          }
+
           if (this.pollutionData) {
             this.showPollutionChart = true;
             this.$nextTick(() => {
@@ -63,18 +76,17 @@ new Vue({
         } catch (error) {
           console.error('Error fetching city suggestions:', error);
         }
-      }, 300);  // Debounce input by 300ms
+      }, 300);
     },
     selectCity(cityName) {
       this.city = cityName;
       this.citySuggestions = [];
-      this.getWeather();  // Automatically fetch the weather for the selected city
+      this.getWeather();
     },
     closeModal() {
       this.showModal = false;
     },
 
-    // Method to update the pollution chart
     updatePollutionChart(pollutionData) {
       const ctx = document.getElementById('pollutionChart').getContext('2d');
       if (this.pollutionChart) {
@@ -124,12 +136,10 @@ new Vue({
       });
     },
 
-    // Method to show the hourly forecast for the selected day
     async showHourlyForecast(day) {
       this.selectedDay = day;
       this.showModal = true;
 
-      // Fetch the detailed hourly forecast
       const response = await fetch(`http://localhost:3000/hourly?city=${encodeURIComponent(this.city)}&date=${encodeURIComponent(day.date)}`);
       const data = await response.json();
       console.log(data)

@@ -34,8 +34,10 @@
 
         <!-- Weather Forecast Display -->
         <div v-if="forecast.length">
-            <h2>3-Day Forecast for {{ city.toUpperCase() }}</h2>
+            <h2>5-Day Forecast for {{ city.toUpperCase() }}</h2>
             <p>{{ packingAdvice }}</p>
+            <p v-if="pollutionWarning" style="color: rgb(0, 0, 0); font-weight: bold; border: 1px white; margin-bottom: -15px;">{{ pollutionWarning.toUpperCase() }}</p>
+
             <div id="response1" class="response1">
                 <table>
 

@@ -5,7 +5,7 @@ const cors = require('cors');
 const app = express();
 const port = 3000;
 
-const API_KEY = '113e7529a5fc767ca4778b3fc0c0a05d';  // Your API Key
+const API_KEY = '113e7529a5fc767ca4778b3fc0c0a05d';
 
 app.use(cors());
 
@@ -62,16 +62,32 @@ const getDailyForecastWithTempRange = (forecast) => {
   return dailyForecast;
 };
 
+const checkForElevatedPollution = (pollutionData) => {
+  const elevatedPollutants = [];
+
+  // Example thresholds for "Good" air quality (adjust according to API documentation)
+  if (pollutionData.pm2_5 > 12) elevatedPollutants.push('PM2.5');
+  if (pollutionData.pm10 > 50) elevatedPollutants.push('PM10');
+  if (pollutionData.o3 > 100) elevatedPollutants.push('O3');
+  if (pollutionData.no2 > 100) elevatedPollutants.push('NO2');
+  if (pollutionData.so2 > 20) elevatedPollutants.push('SO2');
+  if (pollutionData.co > 4) elevatedPollutants.push('CO');
+
+  return elevatedPollutants.length > 0 ? elevatedPollutants : null;
+};
+
+
 const generatePackingAdvice = (forecast) => {
   let packingAdvice = 'Packing recommendation: ';
   const hasRain = forecast.some(day => day.rain > 0);
   const hasCold = forecast.some(day => day.temp_min < 8);
   const hasHot = forecast.some(day => day.temp_max > 24);
 
-  if (hasRain) packingAdvice += 'Bring an umbrella, rain is expected. ';
-  if (hasCold) packingAdvice += 'Prepare for cold weather and pack accordingly. ';
-  if (hasHot) packingAdvice += 'Prepare for hot weather and pack accordingly. ';
-  if (!hasCold && !hasHot) packingAdvice += 'Weather is mild.';
+  if (hasRain) packingAdvice += 'Bring an umbrella, rain is expected. \n';
+  if (hasCold  && hasHot || hasCold && !hasHot) packingAdvice += 'Prepare for varying temperatures and pack accordingly. \n';
+  else if (hasCold) packingAdvice += 'Prepare for cold weather and pack accordingly. \n';
+  else if (hasHot) packingAdvice += 'Prepare for hot weather and pack accordingly. \n';
+  else if (!hasCold && !hasHot) packingAdvice += 'Weather is mild.\n';
 
   return packingAdvice;
 };
@@ -116,11 +132,14 @@ app.get('/weather', async (req, res) => {
 
     const { lat, lon } = weatherData.city.coord;
     const pollutionData = await fetchAirPollutionData(lat, lon);
+    const elevatedPollutants = checkForElevatedPollution(pollutionData);
+
 
     res.json({
       forecast: dailyForecast,
       packingAdvice,
-      pollutionData
+      pollutionData,
+      elevatedPollutants
     });
   } catch (error) {
     console.error('Error handling request:', error.message);
